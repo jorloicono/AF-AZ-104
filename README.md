@@ -1,28 +1,20 @@
-# AF-AZURE-GRUPO-FLORIDA
+# Unidad 1
 
-### **Módulo 1: Introducción a Azure (3 horas)**
+## Módulo 1: Identidad
 
-- Qué es Azure y cómo funciona.
-- Servicios básicos de Azure: una visión general.
+- Azure Active Directory  
+- Usuarios y Grupos  
 
-### **Módulo 2: Fundamentos de Azure Active Directory (5 horas)**
+## Módulo 2: Gobernanza y cumplimiento
 
-- Configuración básica de Azure AD.
-- Gestión de usuarios, grupos y políticas de acceso condicional.
-
-### **Módulo 3: Administración de Identidades y Recursos (6 horas)**
-
-- Gestión de accesos a Power Automate y Datalake.
-- Configuración de roles y permisos.
-- Supervisión y auditoría.
-
-### **Módulo 4: Administración de Licencias y Herramientas Integradas (4 horas)**
-
-- Gestión de licencias de Office 365.
-- Uso de PowerShell para automatizar tareas comunes en Azure.
+- Subscripciones y cuentas  
+- Política de Azure  
+- Control de acceso basado en roles (RBAC)  
 
 
-### **Módulo 5: Ejercicios y Casos Prácticos (2 horas)**
+## Módulo 3: Administración de Azure
 
-- Resolución de problemas reales del cliente.
-- Revisión final y consultas específicas.
+- Azure Resource Manager  
+- Portal de Azure y Cloud Shell  
+- Azure PowerShell y CLI  
+- Plantillas de ARM  

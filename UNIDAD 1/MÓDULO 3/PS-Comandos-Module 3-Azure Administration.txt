@@ -1,0 +1,81 @@
+Windows Machine - PowerShell
+• Abrir PowerShell
+
+• Conectar al portal de Azure:
+	Connect-AzAccount
+
+• Validar el valor de la suscripción:
+	Get-AzContext | fl
+	Tomar nota del valor Subscription
+
+• Habilitar la suscripción para su uso:
+	Set-AzContext -Subscription <suscripcion ID>
+
+• Listar las regiones disponibles:
+	Get-AzLocation | select Location
+
+• Crear un Resource Group
+	New-AzResourceGroup -name rgaz104-01 -location "West Europe"
+
+• Listar Resources Groups
+	Get-AzResourceGroup | ft
+
+• Lock Resource Group
+	New-AzResourceLock -LockName NoDelete -LockLevel CanNotDelete -ResourceGroupName rgaz104-01
+
+	Donde:
+	• name; es el nombre del Lock Group Name a crear
+	• value; para definir el derecho de administración del grupo, solo acepta dos valores, CanNotDelete o ReadOnly
+	• groupname; es el nombre del grupo al que se le asignara la restricción Lock
+
+• Ver Lock Resource Group
+	Get-AzResourceLock
+
+• Eliminar un Resource Group
+	Remove-AzResourceGroup -Name rgaz104-01
+
+• Eliminar un Lock Resource Group
+	Remove-AzResourceLock -LockName Read -ResourceGroupName rgaz104-01
+
+	Donde:
+	• name; es el nombre del Lock Group Name a eliminar.
+	• groupname; es el nombre del grupo al que se le aplica el Lock.
+
+
+Windows Machine - CLI
+• Abrir PowerShell
+
+• Conectar al portal de Azure:
+	Az login
+
+• Crear un Resource Group
+	az group create --name rgaz104-02 --location "West Europe" 
+
+• Ver Resource Group Vigentes
+	az group list
+	az group list --output table
+
+• Eliminar un Resource Group
+	az group delete --name rgaz104-02 --no-wait
+
+	Donde:
+	• name; es el nombre del grupo recurso a borrar 
+	• Lno-wait; parámetro para evitar que la consola CLI se detenga
+
+• Lock Resource Group
+	az lock create --lock-type CanNotDelete --name NoDelete --resource-group rgaz104-02
+
+	Donde:
+	• name; es el nombre del Lock Group Name a crear
+	• value; para definir el derecho de administración del grupo, solo acepta dos valores, CanNotDelete o ReadOnly
+	• groupname; es el nombre del grupo al que se le asignara la restricción Lock
+
+• Ver Lock Resource Group
+	az lock list
+
+• Eliminar un Lock Resource Group
+	az lock delete --name NoDelete --resource-group rgaz104-02
+
+Donde:
+	• name; es el nombre del Lock Group Name a crear
+	• groupname; es el nombre del grupo al que se le asignara la restricción Lock

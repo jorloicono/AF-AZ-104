@@ -1,0 +1,100 @@
+# General Variable
+$prefix = "az104-lb-"
+$rgroup = $prefix + "rg001"
+$location = "west europe"
+
+
+# Create Resource Group
+New-AzResourceGroup -Name $rgroup -Location $location
+
+
+# Create Public IP Address
+$pipname = $prefix + "pip001"
+$pip = New-AzPublicIpAddress -Name $pipname -ResourceGroupName $rgroup -AllocationMethod Static -Location $location -Sku Standard
+
+
+# Create Public Config Load Balancer
+$lbconfig = $prefix + "lb4-config"
+$feclb = New-AzLoadBalancerFrontendIpConfig -Name $lbconfig -PublicIpAddress $pip
+
+
+# Create Backend Address Pool
+$bename = $prefix + "lb4-be001"
+$bepool = New-AzLoadBalancerBackendAddressPoolConfig -Name $bename
+
+
+# Create Health Probe
+$hpname = $prefix + "lb4-hp001"
+$healthprobe = New-AzLoadBalancerProbeConfig -Name $hpname -Protocol "TCP" -Port 80 -IntervalInSeconds 5 -ProbeCount 2
+
+
+# Create Load balancer Rule
+$lbrulename = $prefix + "lbrule001"
+$lbrule = New-AzLoadBalancerRuleConfig -Name $lbrulename -FrontendIPConfiguration $feclb -BackendAddressPool $bepool -Probe $healthprobe -Protocol TCP `
+    -FrontendPort 80 -BackendPort 80 -IdleTimeoutInMinutes 15 -EnableTcpReset -DisableOutboundSNAT
+
+
+# Create Load Balancer
+$lbname = $prefix + "lb001"
+$lb = New-AzLoadBalancer -Name $lbname -ResourceGroupName $rgroup -Location $location -Sku Standard -FrontendIpConfiguration $feclb -BackendAddressPool $bepool -Probe $healthprobe -LoadBalancingRule $lbrule
+
+
+# Create Virtual Network
+$rgroup = $prefix + "rg002"
+New-AzResourceGroup -Name $rgroup -Location $location
+
+$nsgName = $prefix + "nsg001"
+$rdpRule = New-AzNetworkSecurityRuleConfig -Name rdp-rule -Description "Allow RDP" -Access Allow -Protocol Tcp -Direction Inbound -Priority 100 `
+   -SourceAddressPrefix Internet -SourcePortRange * -DestinationAddressPrefix * -DestinationPortRange 3389
+$httpRule = New-AzNetworkSecurityRuleConfig -Name http-rule -Description "Allow HTTP" -Access Allow -Protocol Tcp -Direction Inbound -Priority 110 `
+   -SourceAddressPrefix Internet -SourcePortRange * -DestinationAddressPrefix * -DestinationPortRange 80
+
+$nsg = New-AzNetworkSecurityGroup -ResourceGroupName $rgroup -Location $location -Name $nsgName -SecurityRules $rdpRule,$httpRule
+
+$snet1 = "snet0"
+$snetAddress1 = "10.1.0.0/24"
+$snetconfig1 = New-AzVirtualNetworkSubnetConfig -Name $snet1 -AddressPrefix $snetAddress1 -NetworkSecurityGroup $nsg
+$snet2 = "subnet-appgw"
+$snetAddress2 = "10.1.1.0/27"
+$snetconfig2 = New-AzVirtualNetworkSubnetConfig -Name $snet2 -AddressPrefix $snetAddress2
+
+$vnet = $prefix + "vnet01"
+$vnetAddress = "10.1.0.0/16"
+New-AzVirtualNetwork -Name $vnet -ResourceGroupName $rgroup -Location $location -AddressPrefix $vnetAddress -Subnet $snetconfig1,$snetconfig2
+
+
+# Create Storage Account for DSC Deployment
+$storageName = "dscscripts"
+$storageAccount = New-AzStorageAccount -ResourceGroupName $rgroup -Name $storageName -SkuName Standard_LRS -Location $location
+
+
+# Create VM
+$vnet1 = Get-AzVirtualNetwork -Name $vnet -ResourceGroupName $rgroup
+$bePool = Get-AzLoadBalancer -Name $lb.Name | Get-AzLoadBalancerBackendAddressPoolConfig
+
+$cred = Get-Credential -Message "Usuario y Contraseña para la Maquina Virtual"
+$i=1
+for(;$i -le 2;$i++)
+{
+   $nicName = $prefix + "nicVM$i"
+   $Subnet = $vnet1.subnets[0].Id
+   $nicVM = New-AzNetworkInterface -Name $nicName -ResourceGroupName $rgroup -Location $location -SubnetId $Subnet -LoadBalancerBackendAddressPoolId $bePool.Id
+
+   $VMName = $prefix + "VM$i"
+   $VMSize = "Standard_DS1_v2"
+   $ComputerName = $prefix + "VM$i"
+   $Credential = $cred
+   $PublisherName = "MicrosoftWindowsServer"
+   $Offer = "WindowsServer"
+   $Skus = "2019-Datacenter"
+   $Version = "latest"
+   $vmConfig = New-AzVMConfig -VMName $VMName -VMSize $VMSize `
+               | Set-AzVMOperatingSystem -Windows -ComputerName $ComputerName -Credential $Credential `
+               | Set-AzVMSourceImage -PublisherName $PublisherName -Offer $Offer -Skus $Skus -Version $Version | Add-AzVMNetworkInterface -Id $nicVM.Id 
+   New-AzVM -VM $vmconfig -ResourceGroupName $rgroup -Location $location -Zone $i
+   Set-AzVMDscExtension -Version '2.76' -ResourceGroupName $rgroup -VMName $VMName -ArchiveStorageAccountName $storageAccount.StorageAccountName -ArchiveBlobName 'iisInstall.ps1.zip' -AutoUpdate -ConfigurationName 'IISInstall'
+}
+
+
+# https://docs.microsoft.com/en-us/azure/load-balancer/quickstart-load-balancer-standard-public-powershell?tabs=option-1-create-load-balancer-standard#code-try-5
+# https://docs.microsoft.com/es-es/azure/virtual-machines/extensions/dsc-overview

@@ -1,0 +1,21 @@
+Instalar el IIS
+Install-WindowsFeature -name Web-Server -IncludeManagementTools
+Remove-item 'C:\\inetpub\\wwwroot\\iisstart.htm'
+Add-Content -Path 'C:\\inetpub\\wwwroot\\iisstart.htm' -Value $('Hello World from ' + $env:computername)"
+
+
+Configurar Networking
+az104-06
+az104-06-vnet01
+	Address Space: 10.60.0.0/22
+	subnet0: 10.60.0.0/24
+	subnet1: 10.60.1.0/24
+	subnet-appgw: 10.60.3.224/27
+
+az104-06-vnet02
+	Address Space: 10.62.0.0/22
+	subnet0: 10.62.0.0/24
+
+az104-06-vnet03
+	Address Space: 10.63.0.0/22
+	subnet0: 10.63.0.0/24

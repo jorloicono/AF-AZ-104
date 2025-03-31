@@ -1,0 +1,59 @@
+# General Variable
+$prefix = "az104-vm-"
+$rgroup = $prefix + "rg001"
+$location = "west europe"
+
+
+# Create Resource Group
+New-AzResourceGroup -Name $rgroup -Location $location
+
+# Create Virtual Network
+$nsgName = $prefix + "nsg001"
+$rdpRule = New-AzNetworkSecurityRuleConfig -Name rdp-rule -Description "Allow RDP" -Access Allow -Protocol Tcp -Direction Inbound -Priority 100 `
+   -SourceAddressPrefix Internet -SourcePortRange * -DestinationAddressPrefix * -DestinationPortRange 3389
+$httpRule = New-AzNetworkSecurityRuleConfig -Name http-rule -Description "Allow HTTP" -Access Allow -Protocol Tcp -Direction Inbound -Priority 110 `
+   -SourceAddressPrefix Internet -SourcePortRange * -DestinationAddressPrefix * -DestinationPortRange 80
+$httpsRule = New-AzNetworkSecurityRuleConfig -Name https-rule -Description "Allow HTTPS" -Access Allow -Protocol Tcp -Direction Inbound -Priority 120 `
+   -SourceAddressPrefix Internet -SourcePortRange * -DestinationAddressPrefix * -DestinationPortRange 443
+
+$nsg = New-AzNetworkSecurityGroup -ResourceGroupName $rgroup -Location $location -Name $nsgName -SecurityRules $rdpRule,$httpRule,$httpsRule
+
+$snet1 = "snet0"
+$snetAddress1 = "10.2.1.0/24"
+$snetconfig1 = New-AzVirtualNetworkSubnetConfig -Name $snet1 -AddressPrefix $snetAddress1 -NetworkSecurityGroup $nsg
+$snet2 = "snet1"
+$snetAddress2 = "10.2.2.0/24"
+$snetconfig2 = New-AzVirtualNetworkSubnetConfig -Name $snet2 -AddressPrefix $snetAddress2 -NetworkSecurityGroup $nsg
+
+$vnet = $prefix + "vnet01"
+$vnetAddress = "10.2.0.0/22"
+New-AzVirtualNetwork -Name $vnet -ResourceGroupName $rgroup -Location $location -AddressPrefix $vnetAddress -Subnet $snetconfig1,$snetconfig2
+
+
+# Create VM
+$vnet1 = Get-AzVirtualNetwork -Name $vnet -ResourceGroupName $rgroup
+$cred = Get-Credential -Message "Usuario y Contraseña para la Maquina Virtual"
+$i=1
+for(;$i -le 4;$i++)
+{
+   $nicName = $prefix + "nicVM$i"
+   $Subnet = $vnet1.subnets[0].Id
+   $nicVM = New-AzNetworkInterface -Name $nicName -ResourceGroupName $rgroup -Location $location -SubnetId $Subnet
+
+   $VMName = $prefix + "VM$i"
+   $VMSize = "Standard_DS1_v2"
+   $ComputerName = $prefix + "VM$i"
+   $Credential = $cred
+   $PublisherName = "MicrosoftWindowsServer"
+   $Offer = "WindowsServer"
+   $Skus = "2019-Datacenter"
+   $Version = "latest"
+   $vmConfig = New-AzVMConfig -VMName $VMName -VMSize $VMSize `
+               | Set-AzVMOperatingSystem -Windows -ComputerName $ComputerName -Credential $Credential `
+               | Set-AzVMSourceImage -PublisherName $PublisherName -Offer $Offer -Skus $Skus -Version $Version | Add-AzVMNetworkInterface -Id $nicVM.Id 
+   New-AzVM -VM $vmconfig -ResourceGroupName $rgroup -Location $location -Zone $i
+}
+
+
+# https://docs.microsoft.com/en-us/azure/load-balancer/quickstart-load-balancer-standard-public-powershell?tabs=option-1-create-load-balancer-standard#code-try-5
+# https://docs.microsoft.com/es-es/azure/virtual-machines/extensions/dsc-overview

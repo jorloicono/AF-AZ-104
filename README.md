@@ -18,3 +18,29 @@
 - Portal de Azure y Cloud Shell  
 - Azure PowerShell y CLI  
 - Plantillas de ARM  
+
+# Unidad 2
+
+## Módulo 4: Redes virtuales
+
+- Redes virtuales
+- Direcciones IP
+- Grupos de seguridad de red
+- Azure Firewall
+- Azure DNS
+
+
+
+## Módulo 5: Conectividad entre sitios
+
+- VNet Peering
+- VPN Gateway Connections
+- ExpressRoute and Virtual WAN
+
+
+## Módulo 6: Gestión de tráfico de redes
+
+- Enrutamiento de red y puntos de conexión
+- Azure Load Balancer
+- Azure Application Gateway
+- Azure Traffic Manager

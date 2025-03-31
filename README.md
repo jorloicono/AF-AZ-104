@@ -44,3 +44,21 @@
 - Azure Load Balancer
 - Azure Application Gateway
 - Azure Traffic Manager
+
+# Unidad 3
+
+## Módulo 7: Azure Storage
+
+- Cuentas de almacenamiento
+- Almacenamiento Blob
+- Seguridad de almacenamiento
+- Archivos Azure y sincronización de archivos
+- Gestionar almacenamiento
+
+
+## Módulo 8: Máquinas virtuales Azure
+
+- Planificación de máquinas virtuales
+- Creación de máquinas virtuales
+- Disponibilidad de máquinas virtuales
+- Extensiones de máquinas virtuales
